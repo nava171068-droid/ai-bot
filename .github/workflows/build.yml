@@ -1,0 +1,40 @@
+name: Build from zip
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip project
+        run: unzip -q ai-minecraft-bot-repo.zip -d src
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+
+      - name: Build APK
+        working-directory: src
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Zip addon
+        run: cd src/addon && zip -qr ../../AI_Player_Bot.mcaddon AI_BP
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AIBridge-debug-apk
+          path: src/app/build/outputs/apk/debug/*.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI_Player_Bot-mcaddon
+          path: AI_Player_Bot.mcaddon
